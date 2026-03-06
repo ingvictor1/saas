@@ -2,113 +2,70 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini-SaaS RIAN — Control de Luces</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Control de Velador</title>
   <style>
-    body{font-family:system-ui,Arial;max-width:820px;margin:40px auto;padding:0 16px;line-height:1.35}
-    h1{font-size:34px;margin:0 0 10px}
-    .sub{opacity:.8;margin:0 0 18px}
-    .card{border:1px solid #ddd;border-radius:18px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
-    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
-    button{font-size:18px;padding:14px 18px;border-radius:14px;border:1px solid #ccc;cursor:pointer}
-    button:active{transform:translateY(1px)}
-    .status{margin-top:14px;font-size:16px;padding:12px 14px;border-radius:14px;background:#f7f7f7;border:1px solid #eee}
-    .meta{margin-top:10px;font-size:13px;opacity:.75}
-    code{background:#f3f3f3;padding:2px 6px;border-radius:10px}
-    .dot{display:inline-block;width:10px;height:10px;border-radius:999px;background:#999;margin-right:8px;vertical-align:middle}
-    .ok{background:#22c55e}
-    .bad{background:#ef4444}
-    .wait{background:#f59e0b}
+    body {
+      font-family: Arial, sans-serif;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f7fb;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 16px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .on { background: #16a34a; }
+    .off { background: #dc2626; }
   </style>
 </head>
 <body>
-  <h1>🚀 Mini-SaaS RIAN</h1>
-  <p class="sub">Panel mínimo (vendible): 2 botones para encender/apagar una luz real desde cualquier dispositivo.</p>
-
-  <div class="card">
-    <div class="row">
-      <button id="btnOn">✅ Encender Luz 1</button>
-      <button id="btnOff">🛑 Apagar Luz 1</button>
-      <button id="btnTest">🔎 Probar Conexión</button>
+  <main class="panel">
+    <h1>Control de Velador</h1>
+    <div class="buttons">
+      <button class="on" onclick="encenderVelador()">Encender</button>
+      <button class="off" onclick="apagarVelador()">Apagar</button>
     </div>
-
-    <div class="status" id="status">
-      <span class="dot" id="dot"></span>
-      <span id="msg">Listo. Elegí una acción.</span>
-    </div>
-
-    <div class="meta">
-      Enciende: <code id="urlOn"></code><br/>
-      Apaga: <code id="urlOff"></code>
-    </div>
-  </div>
+  </main>
 
   <script>
-    // === TUS URLS (ya funcionando) ===
-    const URL_ON  = "http://186.182.162.88:8244/pin11";
-    const URL_OFF = "http://186.182.162.88:8244/pin10";
-
-    document.getElementById("urlOn").textContent = URL_ON;
-    document.getElementById("urlOff").textContent = URL_OFF;
-
-    const msg = document.getElementById("msg");
-    const dot = document.getElementById("dot");
-
-    function setStatus(type, text){
-      dot.className = "dot " + (type || "");
-      msg.textContent = text;
+    function encenderVelador() {
+      console.log('Velador encendido');
+      alert('Velador encendido');
     }
 
-    // Llamada ultra-compatible (evita CORS): GET por "imagen invisible"
-    function hit(url, timeoutMs = 4000){
-      return new Promise((resolve, reject) => {
-        setStatus("wait", "Enviando orden...");
-
-        const img = new Image();
-        const t = setTimeout(() => {
-          img.src = ""; // corta intento
-          reject(new Error("Timeout: sin respuesta en " + timeoutMs + "ms"));
-        }, timeoutMs);
-
-        img.onload = () => { clearTimeout(t); resolve(true); };
-        img.onerror = () => { clearTimeout(t); resolve(true); };
-        // Nota: onerror puede disparar aunque el comando haya llegado.
-        // Para control ON/OFF suele ser suficiente: lo importante es disparar el GET.
-
-        // Cache-buster para que el navegador no “recicle” la llamada
-        const bust = (url.includes("?") ? "&" : "?") + "t=" + Date.now();
-        img.src = url + bust;
-      });
+    function apagarVelador() {
+      console.log('Velador apagado');
+      alert('Velador apagado');
     }
-
-    document.getElementById("btnOn").addEventListener("click", async () => {
-      try{
-        await hit(URL_ON);
-        setStatus("ok", "Orden enviada: LUZ ENCENDIDA ✅");
-      }catch(e){
-        setStatus("bad", "No pude contactar el dispositivo: " + e.message);
-      }
-    });
-
-    document.getElementById("btnOff").addEventListener("click", async () => {
-      try{
-        await hit(URL_OFF);
-        setStatus("ok", "Orden enviada: LUZ APAGADA 🛑");
-      }catch(e){
-        setStatus("bad", "No pude contactar el dispositivo: " + e.message);
-      }
-    });
-
-    document.getElementById("btnTest").addEventListener("click", async () => {
-      try{
-        // prueba con ON pero sin cambiar estado real sería ideal,
-        // como no tenemos endpoint de status, solo testeamos conectividad disparando una de las URLs.
-        await hit(URL_ON, 2500);
-        setStatus("ok", "Conexión OK (se pudo enviar una petición) 🔗");
-      }catch(e){
-        setStatus("bad", "Conexión fallida: " + e.message);
-      }
-    });
   </script>
 </body>
 </html>
