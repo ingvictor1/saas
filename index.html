@@ -3,112 +3,357 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini-SaaS RIAN — Control de Luces</title>
+  <title>Misión Cosmos Inmersiva — 5° Primaria</title>
   <style>
-    body{font-family:system-ui,Arial;max-width:820px;margin:40px auto;padding:0 16px;line-height:1.35}
-    h1{font-size:34px;margin:0 0 10px}
-    .sub{opacity:.8;margin:0 0 18px}
-    .card{border:1px solid #ddd;border-radius:18px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
-    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
-    button{font-size:18px;padding:14px 18px;border-radius:14px;border:1px solid #ccc;cursor:pointer}
-    button:active{transform:translateY(1px)}
-    .status{margin-top:14px;font-size:16px;padding:12px 14px;border-radius:14px;background:#f7f7f7;border:1px solid #eee}
-    .meta{margin-top:10px;font-size:13px;opacity:.75}
-    code{background:#f3f3f3;padding:2px 6px;border-radius:10px}
-    .dot{display:inline-block;width:10px;height:10px;border-radius:999px;background:#999;margin-right:8px;vertical-align:middle}
-    .ok{background:#22c55e}
-    .bad{background:#ef4444}
-    .wait{background:#f59e0b}
+    :root{
+      --bg:#060b23;
+      --bg2:#0b1545;
+      --panel:rgba(12,22,66,.78);
+      --line:rgba(167,190,255,.25);
+      --text:#eaf1ff;
+      --muted:#9ab2ff;
+      --ok:#42d392;
+      --warn:#ffcc66;
+      --bad:#ff6b81;
+      --accent:#80aaff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+      color:var(--text);
+      background:radial-gradient(circle at 20% 0%, #20347a 0, #0f1f57 26%, var(--bg) 62%), var(--bg);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    .stars,.stars::before,.stars::after{
+      position:fixed;
+      inset:0;
+      content:"";
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.8) 20%, transparent 22%),
+        radial-gradient(1.5px 1.5px at 80% 40%, rgba(255,255,255,.7) 20%, transparent 22%),
+        radial-gradient(1.8px 1.8px at 50% 90%, rgba(255,255,255,.7) 20%, transparent 22%),
+        radial-gradient(1.2px 1.2px at 15% 70%, rgba(255,255,255,.85) 20%, transparent 22%),
+        radial-gradient(1.4px 1.4px at 75% 15%, rgba(255,255,255,.65) 20%, transparent 22%);
+      background-size:340px 340px;
+      pointer-events:none;
+      z-index:-1;
+      animation:drift 70s linear infinite;
+      opacity:.8;
+    }
+    .stars::before{animation-duration:100s; opacity:.45; filter:blur(.5px)}
+    .stars::after{animation-duration:130s; opacity:.35; filter:blur(1px)}
+    @keyframes drift { from{transform:translateY(0)} to{transform:translateY(-340px)} }
+
+    .wrap{max-width:1150px;margin:0 auto;padding:26px 16px 40px}
+    .hero{
+      border:1px solid var(--line);
+      background:linear-gradient(145deg, rgba(18,33,86,.76), rgba(8,16,48,.84));
+      border-radius:24px;
+      padding:20px;
+      box-shadow:0 10px 40px rgba(0,0,0,.35);
+    }
+    h1{margin:0 0 10px;font-size:clamp(1.8rem,4vw,2.8rem)}
+    .sub{margin:0;color:var(--muted);font-size:1.03rem}
+
+    .status{
+      margin-top:14px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(5,11,34,.65);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      font-weight:600;
+    }
+    .dot{width:11px;height:11px;border-radius:50%;display:inline-block;background:var(--warn)}
+    .dot.ok{background:var(--ok)}
+
+    .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-top:16px}
+    @media (max-width:920px){.grid{grid-template-columns:1fr}}
+
+    .panel{
+      border:1px solid var(--line);
+      background:var(--panel);
+      border-radius:20px;
+      padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2);
+    }
+    .panel h2{margin:0 0 10px;font-size:1.2rem}
+    .panel p{margin:0 0 12px;color:var(--muted)}
+
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    button{
+      border:none;
+      border-radius:13px;
+      padding:10px 14px;
+      font-weight:700;
+      cursor:pointer;
+      background:linear-gradient(145deg,#8bb1ff,#6f8ff6);
+      color:#051136;
+      transition:.18s transform,.18s filter;
+    }
+    button:hover{transform:translateY(-1px);filter:brightness(1.06)}
+
+    .orbit-zone{
+      margin-top:12px;
+      border:1px dashed rgba(153,183,255,.45);
+      border-radius:18px;
+      padding:14px;
+      min-height:320px;
+      position:relative;
+      overflow:hidden;
+      background:radial-gradient(circle at 70% 20%, rgba(106,136,255,.14), transparent 32%);
+    }
+
+    .sun{
+      position:absolute;
+      width:74px;height:74px;border-radius:50%;
+      left:20px;top:50%;transform:translateY(-50%);
+      background:radial-gradient(circle at 35% 35%, #fff6c8 0, #ffd060 36%, #ff9a26 62%, #ff6f00 100%);
+      box-shadow:0 0 24px rgba(255,157,42,.7),0 0 45px rgba(255,149,36,.35);
+    }
+
+    .planet{
+      position:absolute;
+      border-radius:50%;
+      transform:translate(-50%, -50%);
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow:0 0 12px rgba(110,145,255,.35);
+      transition:.2s transform,.2s box-shadow;
+    }
+    .planet:hover{transform:translate(-50%,-50%) scale(1.1);box-shadow:0 0 22px rgba(164,189,255,.8)}
+
+    .badges{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 0}
+    .badge{
+      background:rgba(96,127,236,.18);
+      border:1px solid rgba(153,181,255,.3);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:.83rem;
+      color:#d8e5ff;
+    }
+
+    .mission-card{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(7,13,38,.72)}
+    .mission-card h3{margin:0 0 7px;font-size:1rem}
+    .tiny{font-size:.9rem;color:var(--muted)}
+
+    .quiz-list{display:grid;gap:10px;margin-top:10px}
+    .quiz-q{padding:10px;border:1px solid rgba(154,183,255,.25);border-radius:12px;background:rgba(6,12,33,.65)}
+    select{width:100%;margin-top:6px;padding:9px;border-radius:10px;border:1px solid #728bd1;background:#09163e;color:#eaf1ff}
+    .score{margin-top:10px;font-weight:700}
+
+    footer{margin-top:16px;color:var(--muted);font-size:.88rem;text-align:center}
   </style>
 </head>
 <body>
-  <h1>🚀 Mini-SaaS RIAN</h1>
-  <p class="sub">Panel mínimo (vendible): 2 botones para encender/apagar una luz real desde cualquier dispositivo.</p>
+  <div class="stars"></div>
+  <div class="wrap">
+    <section class="hero">
+      <h1>🚀 Misión Cosmos Inmersiva</h1>
+      <p class="sub">Experiencia virtual para 5° de primaria: explora planetas, completa retos y gana insignias sin imprimir nada.</p>
+      <div class="status"><span class="dot" id="dot"></span><span id="statusText">Listo para despegar. Haz clic en “Iniciar misión”.</span></div>
+    </section>
 
-  <div class="card">
-    <div class="row">
-      <button id="btnOn">✅ Encender Luz 1</button>
-      <button id="btnOff">🛑 Apagar Luz 1</button>
-      <button id="btnTest">🔎 Probar Conexión</button>
-    </div>
+    <section class="grid">
+      <article class="panel">
+        <h2>🌌 Mapa interactivo del Sistema Solar</h2>
+        <p>Haz clic en cada planeta para descubrir datos curiosos y sumar insignias de astronauta.</p>
+        <div class="controls">
+          <button id="startBtn">Iniciar misión</button>
+          <button id="autoTourBtn">Tour automático</button>
+          <button id="resetBtn">Reiniciar</button>
+        </div>
 
-    <div class="status" id="status">
-      <span class="dot" id="dot"></span>
-      <span id="msg">Listo. Elegí una acción.</span>
-    </div>
+        <div class="orbit-zone" id="orbitZone">
+          <div class="sun" title="Sol"></div>
+        </div>
 
-    <div class="meta">
-      Enciende: <code id="urlOn"></code><br/>
-      Apaga: <code id="urlOff"></code>
-    </div>
+        <div class="mission-card" id="planetInfo">
+          <h3>🛰️ Centro de información</h3>
+          <p class="tiny">Selecciona un planeta para ver su descripción y reto.</p>
+          <div class="badges" id="badges"></div>
+        </div>
+      </article>
+
+      <aside class="panel">
+        <h2>🎯 Desafío final de la tripulación</h2>
+        <p>Responde el mini-quiz para lograr el rango <strong>Explorador Galáctico</strong>.</p>
+
+        <div class="quiz-list">
+          <div class="quiz-q">
+            <label>1) ¿Qué planeta es el más grande?</label>
+            <select id="q1">
+              <option value="">Selecciona...</option>
+              <option>Marte</option>
+              <option>Júpiter</option>
+              <option>Venus</option>
+            </select>
+          </div>
+          <div class="quiz-q">
+            <label>2) ¿Cuál está más cerca del Sol?</label>
+            <select id="q2">
+              <option value="">Selecciona...</option>
+              <option>Mercurio</option>
+              <option>Tierra</option>
+              <option>Neptuno</option>
+            </select>
+          </div>
+          <div class="quiz-q">
+            <label>3) ¿Qué hace especial a la Tierra?</label>
+            <select id="q3">
+              <option value="">Selecciona...</option>
+              <option>Tiene lava azul</option>
+              <option>Permite vida por agua y atmósfera</option>
+              <option>Está hecha de gas</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="controls" style="margin-top:12px">
+          <button id="checkQuizBtn">Revisar quiz</button>
+        </div>
+        <p class="score" id="scoreText">Puntaje: 0/3</p>
+      </aside>
+    </section>
+    <footer>Tip docente: proyecta esta página en pantalla completa y usa el “Tour automático” para una introducción inmersiva.</footer>
   </div>
 
   <script>
-    // === TUS URLS (ya funcionando) ===
-    const URL_ON  = "http://186.182.162.88:8244/pin11";
-    const URL_OFF = "http://186.182.162.88:8244/pin10";
+    const planets = [
+      {name:"Mercurio", size:12, color:"#b9b9b9", x:160, y:110, fact:"Es el planeta más cercano al Sol.", challenge:"¿Qué pasaría con tu traje espacial en temperaturas extremas?"},
+      {name:"Venus", size:16, color:"#d8b07c", x:230, y:190, fact:"Tiene una atmósfera muy caliente y densa.", challenge:"¿Por qué sería difícil respirar allí?"},
+      {name:"Tierra", size:17, color:"#59a5ff", x:300, y:120, fact:"Tiene agua líquida y atmósfera ideal para la vida.", challenge:"Nombra dos condiciones que permiten vida."},
+      {name:"Marte", size:14, color:"#e16b4c", x:370, y:210, fact:"Es conocido como el planeta rojo.", challenge:"Diseña una mini base para astronautas en Marte."},
+      {name:"Júpiter", size:32, color:"#d8b495", x:470, y:110, fact:"Es el planeta más grande del Sistema Solar.", challenge:"Si Júpiter es gigante, ¿cómo compararías su tamaño con la Tierra?"},
+      {name:"Saturno", size:28, color:"#f0d58e", x:570, y:205, fact:"Sus anillos son espectaculares y están formados por hielo y roca.", challenge:"¿Qué crees que verías al acercarte a sus anillos?"},
+      {name:"Urano", size:22, color:"#79d6e8", x:670, y:120, fact:"Gira casi “acostado” respecto a su órbita.", challenge:"¿Cómo cambiarían los días y noches con esa inclinación?"},
+      {name:"Neptuno", size:21, color:"#3f73ff", x:760, y:200, fact:"Tiene vientos extremadamente fuertes.", challenge:"¿Qué tipo de clima esperarías en Neptuno?"}
+    ];
 
-    document.getElementById("urlOn").textContent = URL_ON;
-    document.getElementById("urlOff").textContent = URL_OFF;
+    const orbitZone = document.getElementById('orbitZone');
+    const planetInfo = document.getElementById('planetInfo');
+    const statusText = document.getElementById('statusText');
+    const dot = document.getElementById('dot');
+    let badgesEl = document.getElementById('badges');
 
-    const msg = document.getElementById("msg");
-    const dot = document.getElementById("dot");
+    const discovered = new Set();
+    let autoTourInterval;
 
-    function setStatus(type, text){
-      dot.className = "dot " + (type || "");
-      msg.textContent = text;
+    function setStatus(text, ready=true){
+      statusText.textContent = text;
+      dot.classList.toggle('ok', ready);
     }
 
-    // Llamada ultra-compatible (evita CORS): GET por "imagen invisible"
-    function hit(url, timeoutMs = 4000){
-      return new Promise((resolve, reject) => {
-        setStatus("wait", "Enviando orden...");
+    function drawPlanets(){
+      planets.forEach((planet, idx) => {
+        const node = document.createElement('button');
+        node.className = 'planet';
+        node.style.width = `${planet.size}px`;
+        node.style.height = `${planet.size}px`;
+        node.style.background = planet.color;
+        node.style.left = `${planet.x}px`;
+        node.style.top = `${planet.y}px`;
+        node.title = planet.name;
+        node.setAttribute('aria-label', planet.name);
 
-        const img = new Image();
-        const t = setTimeout(() => {
-          img.src = ""; // corta intento
-          reject(new Error("Timeout: sin respuesta en " + timeoutMs + "ms"));
-        }, timeoutMs);
-
-        img.onload = () => { clearTimeout(t); resolve(true); };
-        img.onerror = () => { clearTimeout(t); resolve(true); };
-        // Nota: onerror puede disparar aunque el comando haya llegado.
-        // Para control ON/OFF suele ser suficiente: lo importante es disparar el GET.
-
-        // Cache-buster para que el navegador no “recicle” la llamada
-        const bust = (url.includes("?") ? "&" : "?") + "t=" + Date.now();
-        img.src = url + bust;
+        node.addEventListener('click', () => inspectPlanet(idx));
+        orbitZone.appendChild(node);
       });
     }
 
-    document.getElementById("btnOn").addEventListener("click", async () => {
-      try{
-        await hit(URL_ON);
-        setStatus("ok", "Orden enviada: LUZ ENCENDIDA ✅");
-      }catch(e){
-        setStatus("bad", "No pude contactar el dispositivo: " + e.message);
-      }
-    });
+    function inspectPlanet(idx){
+      const p = planets[idx];
+      discovered.add(p.name);
+      setStatus(`Visitaste ${p.name}. Planetas explorados: ${discovered.size}/8`, true);
 
-    document.getElementById("btnOff").addEventListener("click", async () => {
-      try{
-        await hit(URL_OFF);
-        setStatus("ok", "Orden enviada: LUZ APAGADA 🛑");
-      }catch(e){
-        setStatus("bad", "No pude contactar el dispositivo: " + e.message);
-      }
-    });
+      planetInfo.innerHTML = `
+        <h3>🪐 ${p.name}</h3>
+        <p><strong>Dato:</strong> ${p.fact}</p>
+        <p><strong>Reto:</strong> ${p.challenge}</p>
+        <p class="tiny">Sigue explorando hasta completar los 8 planetas.</p>
+      `;
+      renderBadges();
+    }
 
-    document.getElementById("btnTest").addEventListener("click", async () => {
-      try{
-        // prueba con ON pero sin cambiar estado real sería ideal,
-        // como no tenemos endpoint de status, solo testeamos conectividad disparando una de las URLs.
-        await hit(URL_ON, 2500);
-        setStatus("ok", "Conexión OK (se pudo enviar una petición) 🔗");
-      }catch(e){
-        setStatus("bad", "Conexión fallida: " + e.message);
-      }
-    });
+    function renderBadges(){
+      badgesEl.innerHTML = '';
+      planets.forEach(p => {
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = discovered.has(p.name) ? `✅ ${p.name}` : `⬜ ${p.name}`;
+        badgesEl.appendChild(badge);
+      });
+      planetInfo.appendChild(badgesEl);
+    }
+
+    function startMission(){
+      setStatus('Misión iniciada. Haz clic en los planetas para descubrirlos.', true);
+      renderBadges();
+    }
+
+    function runAutoTour(){
+      clearInterval(autoTourInterval);
+      let i = 0;
+      startMission();
+      autoTourInterval = setInterval(() => {
+        inspectPlanet(i);
+        i += 1;
+        if(i >= planets.length){
+          clearInterval(autoTourInterval);
+          setStatus('Tour completo. ¡Tripulación lista para el desafío final!', true);
+        }
+      }, 1300);
+    }
+
+    function resetAll(){
+      clearInterval(autoTourInterval);
+      discovered.clear();
+      document.getElementById('q1').value = '';
+      document.getElementById('q2').value = '';
+      document.getElementById('q3').value = '';
+      document.getElementById('scoreText').textContent = 'Puntaje: 0/3';
+      planetInfo.innerHTML = `
+        <h3>🛰️ Centro de información</h3>
+        <p class="tiny">Selecciona un planeta para ver su descripción y reto.</p>
+        <div class="badges" id="badges"></div>
+      `;
+      badgesEl = document.getElementById('badges');
+      setStatus('Listo para despegar. Haz clic en “Iniciar misión”.', false);
+      renderBadges();
+    }
+
+    function checkQuiz(){
+      const answers = {
+        q1:'Júpiter',
+        q2:'Mercurio',
+        q3:'Permite vida por agua y atmósfera'
+      };
+
+      let points = 0;
+      ['q1','q2','q3'].forEach(id => {
+        const val = document.getElementById(id).value;
+        if(val === answers[id]) points += 1;
+      });
+
+      const msg = points === 3
+        ? '🏆 Puntaje: 3/3 — ¡Rango obtenido: Explorador Galáctico!'
+        : `Puntaje: ${points}/3 — Sigue entrenando, astronauta.`;
+      document.getElementById('scoreText').textContent = msg;
+      setStatus(points === 3 ? 'Misión completada con éxito total. 👏' : 'Buen intento. Revisa y vuelve a lanzar el desafío.', points === 3);
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startMission);
+    document.getElementById('autoTourBtn').addEventListener('click', runAutoTour);
+    document.getElementById('resetBtn').addEventListener('click', resetAll);
+    document.getElementById('checkQuizBtn').addEventListener('click', checkQuiz);
+
+    drawPlanets();
+    resetAll();
   </script>
 </body>
 </html>
